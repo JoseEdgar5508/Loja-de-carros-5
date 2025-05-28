@@ -117,8 +117,8 @@ public class LojaDeCarrosGUI extends JFrame {
         JTextField campoObs = new JTextField();
         JButton btnRegistrar = new JButton("Registrar Venda");
 
-        painel.add(new JLabel("Índice do Carro:")); painel.add(campoIndiceCarro);
-        painel.add(new JLabel("Índice do Cliente:")); painel.add(campoIndiceCliente);
+        painel.add(new JLabel("IDCarro:")); painel.add(campoIndiceCarro);
+        painel.add(new JLabel("Cliente CPF:")); painel.add(campoIndiceCliente);
         painel.add(new JLabel("Data da Venda:")); painel.add(campoData);
         painel.add(new JLabel("Valor:")); painel.add(campoValor);
         painel.add(new JLabel("Método de Pagamento:")); painel.add(campoMetodo);
