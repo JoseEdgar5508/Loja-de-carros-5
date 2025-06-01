@@ -1,3 +1,5 @@
+package projeto.bd.poo.meu;
+
 public class Venda {
     private static int contadorID = 1;
     private int vendaID;
