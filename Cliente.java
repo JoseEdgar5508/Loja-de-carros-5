@@ -1,3 +1,5 @@
+package projeto.bd.poo.meu;
+
 public class Cliente {
     private static int contadorID = 1;
     private int clienteID;
@@ -25,4 +27,5 @@ public class Cliente {
         return "ID: " + clienteID + " | " + nome + " - " + telefone + " - " + email +
                 " | CPF: " + cpf + " | Endereço: " + cep + ", " + cidade + " - " + estado;
     }
+    // TEM QUE CRIAR UMA FUNÇÃO PARA CADASTRAR O CLIENTE
 }

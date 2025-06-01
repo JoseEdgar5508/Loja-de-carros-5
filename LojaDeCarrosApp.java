@@ -1,3 +1,5 @@
+package projeto.bd.poo.meu;
+
 import javax.swing.SwingUtilities;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,38 +9,44 @@ import java.sql.SQLException;
 //ARQUIVO PRINCIPAL
 public class LojaDeCarrosApp {
     public static void main(String[] args) {
-        //Interface
-        SwingUtilities.invokeLater(LojaDeCarrosGUI::new);
-        
-        //Tentando conectar com o bd
+        // Tentando conectar com o bd
         String sql = "SELECT id, nome FROM categoria";
         Connection conn = null;
-
+        
+        //Talvez eu precise usar depois:
+        //Thread.sleep(2000); // Pausa por 2 segundos (2000 milissegundos)
         try {
-            conn = conectarbd.getConnection();
+            conn = Conectarbd.getConnection();
             System.out.println("Conexão bem-sucedida!");
+            // RODAR O PROGRAMA AQUI - se a conexão for bem-sucedida
+            
+            // Iniciando a interface gráfica
+            SwingUtilities.invokeLater(LojaDeCarrosGUI::new);
 
-            try (PreparedStatement stmt = conn.prepareStatement(sql);
-                 ResultSet rs       = stmt.executeQuery()) {
-
+            try (PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+                // EXEMPLO DE EXECUÇÃO DE CONSULTA
+                /*
                 while (rs.next()) {
-                    int id      = rs.getInt("id");
+                    int id = rs.getInt("id");
                     String nome = rs.getString("nome");
                     System.out.printf("Categoria #%d: %s%n", id, nome);
-                }
+                } */
+                
+                //Tentando criar uma tabela só para testar:
+                Conectarbd.sql.createCarros();
             }
 
         } catch (SQLException e) {
             System.err.println("Erro ao acessar o banco: " + e.getMessage());
             e.printStackTrace();
-        } finally {
+        } finally { //VER UMA FORMA DE DESCONECTAR DO BD SÓ QUANDO O USUÁRIO SAIR
             try {
-                conectarbd.closeConnection(conn);
+                Conectarbd.closeConnection(conn);
                 System.out.println("Conexão encerrada.");
             } catch (SQLException e) {
                 System.err.println("Erro ao fechar conexão: " + e.getMessage());
             }
         }
-    
+
     }
 }

@@ -1,3 +1,5 @@
+package projeto.bd.poo.meu;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,10 +9,11 @@ public class LojaDeCarrosGUI extends JFrame {
     private final ArrayList<Carro> carros = new ArrayList<>();
     private final ArrayList<Cliente> clientes = new ArrayList<>();
     private final ArrayList<Venda> vendas = new ArrayList<>();
-
+    
+    
     private int proximoCarroID = 1;
     private int proximoClienteID = 1;
-    private int proximoVendaID = 1;
+    private int proximoVendaID = 1; 
 
     public LojaDeCarrosGUI() {
         setTitle("Sistema da Loja de Carros");
