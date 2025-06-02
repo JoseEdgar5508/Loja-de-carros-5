@@ -10,13 +10,9 @@ public class Carro {
     private String cor;
     private String placa;
     private String chassi;
-    private String status;
-    //FALTA COLOCAR O NOME DO CARRO!!! 
-    //Adicionar variáveis como tipo de carro e categoria, talvez.
-    // Exemplo: Tipo de carro (sedã, SUV, etc.)
-    // Exemplo: Categoria do carro (popular, luxuoso, esportivo, etc.)
+    private StatusCarro status; // Alterado de String para StatusCarro
 
-    public Carro(String modelo, String marca, int ano, double preco, String cor, String placa, String chassi, String status) {
+    public Carro(String modelo, String marca, int ano, double preco, String cor, String placa, String chassi, StatusCarro status) {
         this.carroID = contadorID++;
         this.modelo = modelo;
         this.marca = marca;
@@ -25,13 +21,20 @@ public class Carro {
         this.cor = cor;
         this.placa = placa;
         this.chassi = chassi;
+        this.status = status; // Atribui o valor do enum
+    }
+
+    public StatusCarro getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusCarro status) {
         this.status = status;
-        
     }
 
     @Override
     public String toString() {
         return "ID: " + carroID + " | " + modelo + " - " + marca + " (" + ano + ") R$" + preco +
-                " | Cor: " + cor + " | Placa: " + placa + " | Chassi: " + chassi + " | Status: " + status;
+                " | Cor: " + cor + " | Placa: " + placa + " | Chassi: " + chassi + " | Status: " + status.toString(); // Usa o toString() do enum
     }
 }

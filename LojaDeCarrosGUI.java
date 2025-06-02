@@ -2,24 +2,24 @@ package projeto.bd.poo.meu;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import javax.swing.DefaultComboBoxModel;
+import projeto.bd.poo.meu.StatusCarro;
 
 public class LojaDeCarrosGUI extends JFrame {
     private final ArrayList<Carro> carros = new ArrayList<>();
     private final ArrayList<Cliente> clientes = new ArrayList<>();
     private final ArrayList<Venda> vendas = new ArrayList<>();
-    
-    
-    private int proximoCarroID = 1;
-    private int proximoClienteID = 1;
-    private int proximoVendaID = 1; 
+
+    private DefaultComboBoxModel<Carro> carroComboBoxModel;
 
     public LojaDeCarrosGUI() {
         setTitle("Sistema da Loja de Carros");
         setSize(600, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        this.carroComboBoxModel = new DefaultComboBoxModel<>();
 
         JTabbedPane abas = new JTabbedPane();
         abas.add("Cadastro de Carros", criarAbaCarros());
@@ -32,7 +32,7 @@ public class LojaDeCarrosGUI extends JFrame {
     }
 
     private JPanel criarAbaCarros() {
-        JPanel painel = new JPanel(new GridLayout(9, 2));
+        JPanel painel = new JPanel(new GridLayout(9, 2, 5, 5));
 
         JTextField campoModelo = new JTextField();
         JTextField campoMarca = new JTextField();
@@ -41,7 +41,9 @@ public class LojaDeCarrosGUI extends JFrame {
         JTextField campoCor = new JTextField();
         JTextField campoPlaca = new JTextField();
         JTextField campoChassi = new JTextField();
-        JTextField campoStatus = new JTextField();
+        // Substitua JTextField campoStatus por JComboBox<StatusCarro>
+        JComboBox<StatusCarro> comboStatus = new JComboBox<>(StatusCarro.values()); // Popula com os valores do enum
+
         JButton btnCadastrar = new JButton("Cadastrar Carro");
 
         painel.add(new JLabel("Modelo:")); painel.add(campoModelo);
@@ -51,7 +53,8 @@ public class LojaDeCarrosGUI extends JFrame {
         painel.add(new JLabel("Cor:")); painel.add(campoCor);
         painel.add(new JLabel("Placa:")); painel.add(campoPlaca);
         painel.add(new JLabel("Chassi:")); painel.add(campoChassi);
-        painel.add(new JLabel("Status:")); painel.add(campoStatus);
+        painel.add(new JLabel("Status:")); painel.add(comboStatus); // Adiciona o JComboBox
+        painel.add(new JLabel());
         painel.add(btnCadastrar);
 
         btnCadastrar.addActionListener(e -> {
@@ -63,23 +66,46 @@ public class LojaDeCarrosGUI extends JFrame {
                 String cor = campoCor.getText();
                 String placa = campoPlaca.getText();
                 String chassi = campoChassi.getText();
-                String status = campoStatus.getText();
+                // Pega o status selecionado do JComboBox
+                StatusCarro status = (StatusCarro) comboStatus.getSelectedItem();
 
+                if (modelo.trim().isEmpty() || marca.trim().isEmpty() || cor.trim().isEmpty() ||
+                        placa.trim().isEmpty() || chassi.trim().isEmpty() || status == null /* Verifica se algo foi selecionado */) {
+                    JOptionPane.showMessageDialog(this,
+                            "Todos os campos de carro são obrigatórios!",
+                            "Erro de Entrada",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // O construtor de Carro agora espera um StatusCarro
                 Carro carro = new Carro(modelo, marca, ano, preco, cor, placa, chassi, status);
                 carros.add(carro);
+                if (this.carroComboBoxModel != null) { // Verifica se o modelo do combobox de vendas existe
+                    this.carroComboBoxModel.addElement(carro);
+                }
+
+
                 JOptionPane.showMessageDialog(this, "Carro cadastrado com sucesso!");
 
+                campoModelo.setText("");
+                campoMarca.setText("");
+                campoAno.setText("");
+                campoPreco.setText("");
+                campoCor.setText("");
+                campoPlaca.setText("");
+                campoChassi.setText("");
+                comboStatus.setSelectedIndex(0); // Define para o primeiro status (ou -1 para nenhum)
+
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Erro nos dados numéricos (ano ou preço).");
+                JOptionPane.showMessageDialog(this, "Erro nos dados numéricos do carro (ano ou preço). Verifique e tente novamente.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
             }
         });
-
         return painel;
     }
 
-    // Dentro de LojaDeCarrosGUI.java
     private JPanel criarAbaClientes() {
-        JPanel painel = new JPanel(new GridLayout(9, 2));
+        JPanel painel = new JPanel(new GridLayout(9, 2, 5, 5));
         JTextField campoNome = new JTextField();
         JTextField campoTelefone = new JTextField();
         JTextField campoEmail = new JTextField();
@@ -87,15 +113,16 @@ public class LojaDeCarrosGUI extends JFrame {
         JTextField campoCEP = new JTextField();
         JTextField campoEstado = new JTextField();
         JTextField campoCidade = new JTextField();
-        JButton btnCadastrar = new JButton("Cadastrar");
+        JButton btnCadastrar = new JButton("Cadastrar Cliente");
 
         painel.add(new JLabel("Nome:")); painel.add(campoNome);
         painel.add(new JLabel("Telefone:")); painel.add(campoTelefone);
         painel.add(new JLabel("Email:")); painel.add(campoEmail);
-        painel.add(new JLabel("CPF (somente números):")); painel.add(campoCPF); // Atualizei o label para clareza
-        painel.add(new JLabel("CEP (somente números):")); painel.add(campoCEP);   // Atualizei o label para clareza
+        painel.add(new JLabel("CPF:")); painel.add(campoCPF);
+        painel.add(new JLabel("CEP:")); painel.add(campoCEP);
         painel.add(new JLabel("Estado (Sigla, ex: SP):")); painel.add(campoEstado);
         painel.add(new JLabel("Cidade:")); painel.add(campoCidade);
+        painel.add(new JLabel());
         painel.add(btnCadastrar);
 
         btnCadastrar.addActionListener(e -> {
@@ -108,12 +135,11 @@ public class LojaDeCarrosGUI extends JFrame {
                 String estadoInput = campoEstado.getText();
                 String cidade = campoCidade.getText();
 
-                // Validação e conversão do Telefone
                 if (nome.trim().isEmpty() || telefoneStr.trim().isEmpty() || email.trim().isEmpty() ||
                         cpfInput.trim().isEmpty() || cepInput.trim().isEmpty() || estadoInput.trim().isEmpty() ||
                         cidade.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                            "Todos os campos são obrigatórios!",
+                            "Todos os campos de cliente são obrigatórios!",
                             "Erro de Entrada",
                             JOptionPane.ERROR_MESSAGE);
                     return;
@@ -127,19 +153,17 @@ public class LojaDeCarrosGUI extends JFrame {
                             "Telefone inválido. Deve ser um número.",
                             "Erro de Formato",
                             JOptionPane.ERROR_MESSAGE);
-                    return; // Interrompe o processamento
+                    return;
                 }
 
-                // Validação do Estado (Sigla com 2 letras)
                 if (!estadoInput.matches("[a-zA-Z]{2}")) {
                     JOptionPane.showMessageDialog(this,
                             "Sigla do Estado inválida. Deve conter exatamente 2 letras (ex: SP, RJ).",
                             "Erro de Formato",
                             JOptionPane.ERROR_MESSAGE);
-                    return; // Interrompe o processamento
+                    return;
                 }
-                String estadoFormatado = estadoInput.toUpperCase(); // Padroniza para maiúsculas
-
+                String estadoFormatado = estadoInput.toUpperCase();
 
                 String cpfApenasNumeros = cpfInput.replaceAll("[^0-9]", "");
                 if (cpfApenasNumeros.length() != 11) {
@@ -147,9 +171,8 @@ public class LojaDeCarrosGUI extends JFrame {
                             "CPF inválido. Deve conter 11 dígitos numéricos.",
                             "Erro de Formato",
                             JOptionPane.ERROR_MESSAGE);
-                    return; // Interrompe o processamento
+                    return;
                 }
-
 
                 String cepApenasNumeros = cepInput.replaceAll("[^0-9]", "");
                 if (cepApenasNumeros.length() != 8) {
@@ -157,21 +180,19 @@ public class LojaDeCarrosGUI extends JFrame {
                             "CEP inválido. Deve conter 8 dígitos numéricos.",
                             "Erro de Formato",
                             JOptionPane.ERROR_MESSAGE);
-                    return; // Interrompe o processamento
+                    return;
                 }
-
 
                 Cliente cliente = new Cliente(
                         nome, telefone, email,
-                        cpfInput, // Ou cpfApenasNumeros, se preferir guardar sem formatação
-                        cepInput, // Ou cepApenasNumeros, se preferir guardar sem formatação
+                        cpfInput,
+                        cepInput,
                         estadoFormatado,
                         cidade
                 );
                 clientes.add(cliente);
                 JOptionPane.showMessageDialog(this, "Cliente cadastrado com sucesso!");
 
-                // Limpar campos após cadastro (opcional)
                 campoNome.setText("");
                 campoTelefone.setText("");
                 campoEmail.setText("");
@@ -180,22 +201,22 @@ public class LojaDeCarrosGUI extends JFrame {
                 campoEstado.setText("");
                 campoCidade.setText("");
 
-            } catch (Exception ex) { // Captura genérica para outros erros inesperados
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
-                        "Ocorreu um erro inesperado: " + ex.getMessage(),
+                        "Ocorreu um erro inesperado ao cadastrar cliente: " + ex.getMessage(),
                         "Erro",
                         JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace(); // Ajuda a depurar no console
+                ex.printStackTrace();
             }
         });
-
         return painel;
     }
 
-
     private JPanel criarAbaVendas() {
-        JPanel painel = new JPanel(new GridLayout(7, 2));
-        JTextField campoIndiceCarro = new JTextField();
+        JPanel painel = new JPanel(new GridLayout(7, 2, 5, 5));
+
+        JComboBox<Carro> comboBoxCarros = new JComboBox<>(this.carroComboBoxModel);
+
         JTextField campoIndiceCliente = new JTextField();
         JTextField campoData = new JTextField();
         JTextField campoValor = new JTextField();
@@ -203,39 +224,86 @@ public class LojaDeCarrosGUI extends JFrame {
         JTextField campoObs = new JTextField();
         JButton btnRegistrar = new JButton("Registrar Venda");
 
-        painel.add(new JLabel("IDCarro:")); painel.add(campoIndiceCarro);
-        painel.add(new JLabel("Cliente CPF:")); painel.add(campoIndiceCliente);
-        painel.add(new JLabel("Data da Venda:")); painel.add(campoData);
-        painel.add(new JLabel("Valor:")); painel.add(campoValor);
-        painel.add(new JLabel("Método de Pagamento:")); painel.add(campoMetodo);
-        painel.add(new JLabel("Observações:")); painel.add(campoObs);
+        painel.add(new JLabel("Selecione o Carro:"));
+        painel.add(comboBoxCarros);
+        painel.add(new JLabel("Cliente (CPF.):"));
+        painel.add(campoIndiceCliente);
+        painel.add(new JLabel("Data da Venda (AAAA-MM-DD):"));
+        painel.add(campoData);
+        painel.add(new JLabel("Valor da Venda:"));
+        painel.add(campoValor);
+        painel.add(new JLabel("Método de Pagamento:"));
+        painel.add(campoMetodo);
+        painel.add(new JLabel("Observações:"));
+        painel.add(campoObs);
+        painel.add(new JLabel());
         painel.add(btnRegistrar);
 
         btnRegistrar.addActionListener(e -> {
             try {
-                int idxCarro = Integer.parseInt(campoIndiceCarro.getText());
-                int idxCliente = Integer.parseInt(campoIndiceCliente.getText());
-                String data = campoData.getText();
-                double valor = Double.parseDouble(campoValor.getText());
-                String metodo = campoMetodo.getText();
-                String obs = campoObs.getText();
+                Carro carroSelecionado = (Carro) comboBoxCarros.getSelectedItem();
 
-                if (idxCarro < 0 || idxCarro >= carros.size() || idxCliente < 0 || idxCliente >= clientes.size()) {
-                    JOptionPane.showMessageDialog(this, "Índices inválidos.");
+                if (carroSelecionado == null) {
+                    JOptionPane.showMessageDialog(this, "Por favor, selecione um carro.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                Venda venda = new Venda(carros.get(idxCarro), clientes.get(idxCliente), data, valor, metodo, obs);
-                vendas.add(venda);
-                JOptionPane.showMessageDialog(this, "Venda registrada!");
+                String indiceClienteStr = campoIndiceCliente.getText();
+                Cliente clienteSelecionado = null;
+
+                if (indiceClienteStr.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "O campo do cliente não pode estar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                try {
+                    int clienteIdx = Integer.parseInt(indiceClienteStr);
+                    if (clienteIdx >= 0 && clienteIdx < clientes.size()) {
+                        clienteSelecionado = clientes.get(clienteIdx);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Índice do cliente inválido.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Referência do cliente inválida. Use o índice numérico.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String dataVenda = campoData.getText();
+                if (!dataVenda.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    JOptionPane.showMessageDialog(this, "Formato da data inválido. Use AAAA-MM-DD.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                double valorVenda = Double.parseDouble(campoValor.getText());
+                String metodoPagamento = campoMetodo.getText();
+                String observacoes = campoObs.getText();
+
+                if (metodoPagamento.trim().isEmpty()){
+                    JOptionPane.showMessageDialog(this, "O método de pagamento não pode estar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                Venda novaVenda = new Venda(carroSelecionado, clienteSelecionado, dataVenda, valorVenda, metodoPagamento, observacoes);
+                vendas.add(novaVenda);
+
+                JOptionPane.showMessageDialog(this, "Venda registrada com sucesso!");
+
+                comboBoxCarros.setSelectedIndex(-1);
+                campoIndiceCliente.setText("");
+                campoData.setText("");
+                campoValor.setText("");
+                campoMetodo.setText("");
+                campoObs.setText("");
+
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Erro: verifique os dados.");
+                JOptionPane.showMessageDialog(this, "Erro ao registrar venda: Verifique os campos numéricos (Valor, Índice do Cliente).", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ocorreu um erro inesperado ao registrar venda: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         });
-
         return painel;
     }
-
 
     private JPanel criarAbaConsultas() {
         JPanel painel = new JPanel(new FlowLayout());
@@ -298,5 +366,8 @@ public class LojaDeCarrosGUI extends JFrame {
 
         return painel;
     }
-}
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(LojaDeCarrosGUI::new);
+    }
+}
