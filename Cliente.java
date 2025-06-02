@@ -4,14 +4,14 @@ public class Cliente {
     private static int contadorID = 1;
     private int clienteID;
     private String nome;
-    private String telefone;
+    private int telefone;
     private String email;
     private String cpf;
     private String cep;
     private String estado;
     private String cidade;
 
-    public Cliente(String nome, String telefone, String email, String cpf, String cep, String estado, String cidade) {
+    public Cliente(String nome, int telefone, String email, String cpf, String cep, String estado, String cidade) {
         this.clienteID = contadorID++;
         this.nome = nome;
         this.telefone = telefone;

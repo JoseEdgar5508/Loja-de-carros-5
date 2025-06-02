@@ -77,6 +77,7 @@ public class LojaDeCarrosGUI extends JFrame {
         return painel;
     }
 
+    // Dentro de LojaDeCarrosGUI.java
     private JPanel criarAbaClientes() {
         JPanel painel = new JPanel(new GridLayout(9, 2));
         JTextField campoNome = new JTextField();
@@ -91,19 +92,108 @@ public class LojaDeCarrosGUI extends JFrame {
         painel.add(new JLabel("Nome:")); painel.add(campoNome);
         painel.add(new JLabel("Telefone:")); painel.add(campoTelefone);
         painel.add(new JLabel("Email:")); painel.add(campoEmail);
-        painel.add(new JLabel("CPF:")); painel.add(campoCPF);
-        painel.add(new JLabel("CEP:")); painel.add(campoCEP);
-        painel.add(new JLabel("Estado:")); painel.add(campoEstado);
+        painel.add(new JLabel("CPF (somente números):")); painel.add(campoCPF); // Atualizei o label para clareza
+        painel.add(new JLabel("CEP (somente números):")); painel.add(campoCEP);   // Atualizei o label para clareza
+        painel.add(new JLabel("Estado (Sigla, ex: SP):")); painel.add(campoEstado);
         painel.add(new JLabel("Cidade:")); painel.add(campoCidade);
         painel.add(btnCadastrar);
 
         btnCadastrar.addActionListener(e -> {
-            Cliente cliente = new Cliente(
-                    campoNome.getText(), campoTelefone.getText(), campoEmail.getText(),
-                    campoCPF.getText(), campoCEP.getText(), campoEstado.getText(), campoCidade.getText()
-            );
-            clientes.add(cliente);
-            JOptionPane.showMessageDialog(this, "Cliente cadastrado!");
+            try {
+                String nome = campoNome.getText();
+                String telefoneStr = campoTelefone.getText();
+                String email = campoEmail.getText();
+                String cpfInput = campoCPF.getText();
+                String cepInput = campoCEP.getText();
+                String estadoInput = campoEstado.getText();
+                String cidade = campoCidade.getText();
+
+                // Validação e conversão do Telefone
+                if (nome.trim().isEmpty() || telefoneStr.trim().isEmpty() || email.trim().isEmpty() ||
+                        cpfInput.trim().isEmpty() || cepInput.trim().isEmpty() || estadoInput.trim().isEmpty() ||
+                        cidade.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this,
+                            "Todos os campos são obrigatórios!",
+                            "Erro de Entrada",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int telefone;
+                try {
+                    telefone = Integer.parseInt(telefoneStr);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Telefone inválido. Deve ser um número.",
+                            "Erro de Formato",
+                            JOptionPane.ERROR_MESSAGE);
+                    return; // Interrompe o processamento
+                }
+
+                // Validação do Estado (Sigla com 2 letras)
+                if (!estadoInput.matches("[a-zA-Z]{2}")) {
+                    JOptionPane.showMessageDialog(this,
+                            "Sigla do Estado inválida. Deve conter exatamente 2 letras (ex: SP, RJ).",
+                            "Erro de Formato",
+                            JOptionPane.ERROR_MESSAGE);
+                    return; // Interrompe o processamento
+                }
+                String estadoFormatado = estadoInput.toUpperCase(); // Padroniza para maiúsculas
+
+                // Validação do CPF (deve conter 11 dígitos numéricos)
+                // Remove caracteres não numéricos para validação. Você pode optar por manter a máscara
+                // na classe Cliente ou remover antes de salvar, dependendo da sua necessidade.
+                String cpfApenasNumeros = cpfInput.replaceAll("[^0-9]", "");
+                if (cpfApenasNumeros.length() != 11) {
+                    JOptionPane.showMessageDialog(this,
+                            "CPF inválido. Deve conter 11 dígitos numéricos.",
+                            "Erro de Formato",
+                            JOptionPane.ERROR_MESSAGE);
+                    return; // Interrompe o processamento
+                }
+
+                // Validação do CEP (deve conter 8 dígitos numéricos)
+                // Remove caracteres não numéricos para validação.
+                String cepApenasNumeros = cepInput.replaceAll("[^0-9]", "");
+                if (cepApenasNumeros.length() != 8) {
+                    JOptionPane.showMessageDialog(this,
+                            "CEP inválido. Deve conter 8 dígitos numéricos.",
+                            "Erro de Formato",
+                            JOptionPane.ERROR_MESSAGE);
+                    return; // Interrompe o processamento
+                }
+
+                // Se todas as validações passaram:
+                // Para o CPF e CEP no construtor Cliente, você pode passar o input original com máscara
+                // ou a versão apenas com números, dependendo de como quer armazenar.
+                // Aqui, estou passando o input original (cpfInput, cepInput) que o usuário digitou,
+                // mas a validação garantiu que a quantidade de dígitos está correta.
+                Cliente cliente = new Cliente(
+                        nome, telefone, email,
+                        cpfInput, // Ou cpfApenasNumeros, se preferir guardar sem formatação
+                        cepInput, // Ou cepApenasNumeros, se preferir guardar sem formatação
+                        estadoFormatado,
+                        cidade
+                );
+                clientes.add(cliente);
+                JOptionPane.showMessageDialog(this, "Cliente cadastrado com sucesso!");
+
+                // Limpar campos após cadastro (opcional)
+                campoNome.setText("");
+                campoTelefone.setText("");
+                campoEmail.setText("");
+                campoCPF.setText("");
+                campoCEP.setText("");
+                campoEstado.setText("");
+                campoCidade.setText("");
+
+            } catch (Exception ex) { // Captura genérica para outros erros inesperados
+                JOptionPane.showMessageDialog(this,
+                        "Ocorreu um erro inesperado: " + ex.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace(); // Ajuda a depurar no console
+            }
         });
 
         return painel;
