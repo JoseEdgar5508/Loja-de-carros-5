@@ -31,9 +31,9 @@ public class LojaDeCarrosApp {
                     String nome = rs.getString("nome");
                     System.out.printf("Categoria #%d: %s%n", id, nome);
                 } */
-                
-                //Tentando criar uma tabela só para testar:
-                Conectarbd.sql.createCarros();
+
+                //Tentando criar tabelas e inserir dados de exemplo só para testar:
+                Conectarbd.sql.criarTudoEInserirDadosExemplo();
             }
 
         } catch (SQLException e) {

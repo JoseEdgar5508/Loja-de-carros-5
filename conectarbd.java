@@ -28,9 +28,7 @@ public class Conectarbd {
     }
 
     public class sql {
-        // AQUI ESTARÃO AS QUERYS FEITAS NO BD
-
-        // Criação das tabelas - se ainda não existirem
+        // ----------------- Criação das tabelas - se ainda não existirem -----------------
         public static void createVendas() {
             String sql = "CREATE TABLE IF NOT EXISTS vendas (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -76,7 +74,7 @@ public class Conectarbd {
             String sql = "CREATE TABLE IF NOT EXISTS clientes (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "nome VARCHAR(100) NOT NULL, " +
-                    "email VARCHAR(100) NOT NULL, " +
+                    "email VARCHAR(100) NOT NULL, " + // Vai identificar se é clientes, vendedor ou gerente;
                     "telefone VARCHAR(15), " + // Formato: (00) 00000-0000
                     "cidade VARCHAR(50) NOT NULL," +
                     "cpf VARCHAR(14) NOT NULL, " + // Formato: 000.000.000-00
@@ -91,13 +89,13 @@ public class Conectarbd {
             }
         }
 
-        // Inserção de dados de EXEMPLO
+        // ------------------ Inserção de dados de EXEMPLO ------------------
         public static void inserirDadosExemplo() {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
-                String insertCarro = "INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('Toyota', 'Corolla', 2020, 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
-                        "('Honda', 'Civic', 2019, 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
+                String insertCarro = "INSERT INTO carros (nomeCarro, marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
+                        "('Toyota Corolla', 'Toyota', 'Corolla', '2020-01-01', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
+                        "('Honda Civic', 'Honda', 'Civic', '2019-01-01', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
                 conn.createStatement().executeUpdate(insertCarro);
 
                 // Inserir dados de exemplo na tabela 'clientes'
@@ -117,7 +115,17 @@ public class Conectarbd {
             }
         }
 
-        //Inserindo dados que o usuário pode inserir - Vendas
+        //Criar tudo de uma vez e inserir dados de exemplo - apenas para testes e demonstração
+        public static void criarTudoEInserirDadosExemplo() {
+            createCarros();
+            createClientes();
+            createVendas();
+            inserirDadosExemplo();
+        }
+
+        // ------------------- Inserção de dados que o usuário pode inserir ------------------
+
+        // Vendas
         public static void inserirDadosVendas(int idCarro, int idCliente, String data, Float valor, String metodoPagamento, String observacoes) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'vendas'
@@ -130,7 +138,7 @@ public class Conectarbd {
             }
         }
 
-        //Inserindo dados que o usuário pode inserir - Clientes
+        // Clientes
         public static void inserirDadosClientes(String nome, String email, String telefone, String cidade, String cpf, String cep, String estado) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'clientes'
@@ -143,7 +151,7 @@ public class Conectarbd {
             }
         }
         
-        //Inserindo dados que o usuário pode inserir - Carros
+        // Carros
         public static void inserirDadosCarros(String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
@@ -156,11 +164,11 @@ public class Conectarbd {
             }
         }
         
-        //Selects que podem ser importantes:
+        //---------------------- SELECTS ----------------------
 
         // Selecionar todos os carros no estoque (tabela carros)
         public static void selecionarTodosCarros() {
-            String sql = "SELECT * FROM carros";
+            String sql = "SELECT * FROM carros WHERE status = 'Disponível'";
             try (Connection conn = getConnection()) {
                 var stmt = conn.createStatement();
                 var rs = stmt.executeQuery(sql);
@@ -177,7 +185,7 @@ public class Conectarbd {
 
         // Selecionar todos os clientes cadastrados (tabela clientes)
         public static void selecionarTodosClientes() {
-            String sql = "SELECT * FROM clientes";
+            String sql = "SELECT * FROM clientes WHERE email NOT LIKE ('%@funcionario.com') AND email NOT LIKE ('%@gerente.com')"; // Excluindo emails de funcionários e gerentes
             try (Connection conn = getConnection()) {
                 var stmt = conn.createStatement();
                 var rs = stmt.executeQuery(sql);
@@ -212,26 +220,26 @@ public class Conectarbd {
         // Selecionar vendas por cliente (tabela vendas) - saber se tem clientes que compraram mais de um carro
         public static void selecionarVendasPorCliente() {
             String sql = """
-                    SELECT
-                        c.clienteID,
-                        c.nome                  AS nomeCliente,
-                        COUNT(v.idCliente)      AS totalCompras
+                    SELECT 
+                        c.id,
+                        c.nome AS nomeCliente,
+                        COUNT(v.idCliente) AS totalCompras
                     FROM
                         vendas v
-                    INNER JOIN cliente c
-                            ON v.idCliente = c.clienteID
+                    INNER JOIN clientes c
+                            ON v.idCliente = c.id
                     GROUP BY
-                        c.clienteID,
+                        c.id,
                         c.nome
                     ORDER BY
                         totalCompras DESC
                     LIMIT 10; -- Limitar ao top 10
-                        """; 
+            """;
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    System.out.println("Cliente ID: " + rs.getInt("clienteID") +
+                    System.out.println("Cliente ID: " + rs.getInt("id") +
                         " | Nome: " + rs.getString("nomeCliente") +
                         " | Total de Vendas: " + rs.getInt("totalCompras"));
                 }
@@ -241,42 +249,51 @@ public class Conectarbd {
         }
         
         // Selecionar vendas por nome do carro (tabela vendas) - saber se tem carros que foram vendidos mais de uma vez
+        // Pegando por nome, marca e modelo do carro
         public static void selecionarVendasPorCarro() {
             String sql = """
                 SELECT
                     c.nomeCarro         AS nomeCarro,
+                    c.marca             AS marcaCarro,
+                    c.modelo            AS modeloCarro,
                     COUNT(*)            AS totalVendas
                 FROM
                     vendas v
-                    INNER JOIN carro c
-                        ON v.idCarro = c.carroID
+                    INNER JOIN carros c
+                        ON v.idCarro = c.id
                 GROUP BY
-                    c.nomeCarro
+                    c.nomeCarro,
+                    c.marca,
+                    c.modelo
                 ORDER BY
-                    totalVendas DESC;
-                LIMIT 10 -- Limitar ao top 10
-                    """;
+                    totalVendas DESC
+                LIMIT 10; -- Limitar ao top 10
+            """;
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    System.out.println("Carro: " + rs.getString("nomeCarro") + 
+                    System.out.println("Carro: " + rs.getString("nomeCarro") +
+                        " | Marca: " + rs.getString("marcaCarro") +
+                        " | Modelo: " + rs.getString("modeloCarro") +
                         " | Total de Vendas: " + rs.getInt("totalVendas"));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
+
         // Selecionar vendas por data (tabela vendas) - saber se tem vendas em um período específico
+        // Pegando só o Ano e o mês da data da venda
         public static void selecionarVendasPorData() {
             String sql = """
                     SELECT
-                        DATE(v.data) AS dataVenda,
+                        DATE_FORMAT(v.data, '%Y-%m') AS dataVenda,
                         COUNT(*)      AS totalVendas
                     FROM
                         vendas v
                     GROUP BY
-                        DATE(v.data)
+                        DATE_FORMAT(v.data, '%Y-%m')
                     ORDER BY
                         dataVenda
                     LIMIT 10; -- Limitar ao top 10
@@ -285,7 +302,7 @@ public class Conectarbd {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    System.out.println("Data da Venda: " + rs.getDate("dataVenda") +
+                    System.out.println("Data da Venda: " + rs.getString("dataVenda") +
                         " | Total de Vendas: " + rs.getInt("totalVendas"));
                 }
             } catch (SQLException e) {
@@ -299,9 +316,9 @@ public class Conectarbd {
         public static void selecionarVendasPorValor() {
             String sql = """
                     SELECT
-                        AVG(valor) AS mediaValor,
-                        MIN(valor) AS menorValor,
-                        MAX(valor) AS maiorValor
+                        AVG(valor) AS mediaValor, -- média dos preços dos carros vendidos
+                        MIN(valor) AS menorValor, -- menor preço dos carros vendidos
+                        MAX(valor) AS maiorValor -- maior preço dos carros vendidos
                     FROM
                         vendas;
                 """;
@@ -343,6 +360,7 @@ public class Conectarbd {
                 e.printStackTrace();
             }
         }
+
         // Selecionar carros por modelo (tabela carros)- saber o modelo mais vendido
         public static void selecionarCarrosPorModelo() {
             String sql = """
@@ -368,31 +386,34 @@ public class Conectarbd {
                 e.printStackTrace();
             }
         }
+
         // Selecionar carros por ano (tabela carros) - saber se tem carros de um ano específico
+        // Pegando só o mês e o ano do carro
         public static void selecionarCarrosPorAno() {
             String sql = """
                     SELECT
-                        ano,
+                        DATE_FORMAT(c.ano, '%Y-%m') AS dataVenda,
                         COUNT(*) AS totalCarros
                     FROM
-                        carros
+                        carros c
                     GROUP BY
-                        ano
+                        dataVenda
                     ORDER BY
-                        ano DESC
+                        dataVenda DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    System.out.println("Ano: " + rs.getInt("ano") +
+                    System.out.println("Data: " + rs.getString("dataVenda") +
                         " | Total de Carros: " + rs.getInt("totalCarros"));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
+
         // Selecionar carros por cor (tabela carros) - saber se tem carros de uma cor específica
         public static void selecionarCarrosPorCor() {
             String sql = """
@@ -418,6 +439,58 @@ public class Conectarbd {
                 e.printStackTrace();
             }
         }
+        // Função para atualizar o status do carro (tabela carros) - se o carro foi vendido ou não
+        public static void atualizarStatusCarro(int idCarro, String novoStatus) {
+            String sql = "UPDATE carros SET status = ? WHERE id = ?";
+            try (Connection conn = getConnection()) {
+                var stmt = conn.prepareStatement(sql);
+                stmt.setString(1, novoStatus);
+                stmt.setInt(2, idCarro);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Status do carro atualizado com sucesso.");
+                } else {
+                    System.out.println("Nenhum carro encontrado com o ID: " + idCarro);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Função para deletar um carro (tabela carros) - se o carro foi vendido ou não
+        public static void deletarCarro(int idCarro) {
+            String sql = "DELETE FROM carros WHERE id = ?";
+            try (Connection conn = getConnection()) {
+                var stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, idCarro);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Carro deletado com sucesso.");
+                } else {
+                    System.out.println("Nenhum carro encontrado com o ID: " + idCarro);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Função para deletar uma venda (tabela vendas) - se houver algum problema com a venda
+        // ou se o cliente desistiu da compra
+        public static void deletarVenda(int idVenda) {
+            String sql = "DELETE FROM vendas WHERE id = ?";
+            try (Connection conn = getConnection()) {
+                var stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, idVenda);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Venda deletada com sucesso.");
+                } else {
+                    System.out.println("Nenhuma venda encontrada com o ID: " + idVenda);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
         
         //SELECTS PRA VER DEPOIS:
         // Selecionar carros por tipo (tabela carros) - se são sedãs, SUVs, etc. - VER DEPOIS 
@@ -426,6 +499,5 @@ public class Conectarbd {
         // Selecionar carros por status (tabela carros) - se são comprados carros usados ou novos - VER DEPOIS
         // Selecionar clientes por cidade (tabela clientes) - saber se tem clientes de uma cidade específica
         // Selecionar clientes por estado (tabela clientes) - saber se tem clientes de um estado específico
-        //INNER JOIN para relacionar as tabelas:
     }
 }
