@@ -140,9 +140,7 @@ public class LojaDeCarrosGUI extends JFrame {
                 }
                 String estadoFormatado = estadoInput.toUpperCase(); // Padroniza para maiúsculas
 
-                // Validação do CPF (deve conter 11 dígitos numéricos)
-                // Remove caracteres não numéricos para validação. Você pode optar por manter a máscara
-                // na classe Cliente ou remover antes de salvar, dependendo da sua necessidade.
+
                 String cpfApenasNumeros = cpfInput.replaceAll("[^0-9]", "");
                 if (cpfApenasNumeros.length() != 11) {
                     JOptionPane.showMessageDialog(this,
@@ -152,8 +150,7 @@ public class LojaDeCarrosGUI extends JFrame {
                     return; // Interrompe o processamento
                 }
 
-                // Validação do CEP (deve conter 8 dígitos numéricos)
-                // Remove caracteres não numéricos para validação.
+
                 String cepApenasNumeros = cepInput.replaceAll("[^0-9]", "");
                 if (cepApenasNumeros.length() != 8) {
                     JOptionPane.showMessageDialog(this,
@@ -163,11 +160,7 @@ public class LojaDeCarrosGUI extends JFrame {
                     return; // Interrompe o processamento
                 }
 
-                // Se todas as validações passaram:
-                // Para o CPF e CEP no construtor Cliente, você pode passar o input original com máscara
-                // ou a versão apenas com números, dependendo de como quer armazenar.
-                // Aqui, estou passando o input original (cpfInput, cepInput) que o usuário digitou,
-                // mas a validação garantiu que a quantidade de dígitos está correta.
+
                 Cliente cliente = new Cliente(
                         nome, telefone, email,
                         cpfInput, // Ou cpfApenasNumeros, se preferir guardar sem formatação
