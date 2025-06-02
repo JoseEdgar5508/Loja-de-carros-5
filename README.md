@@ -18,7 +18,7 @@ Configuração do BD:
 
 Crie um banco de dados usando phpMyAdmin e altere as seguintes variáveis no arquivo 'conectarbd':
 <code>
-  URL = "jdbc:mysql://localhost:3306/NOME DO SEU BANCO";
+  URL = "jdbc:mysql://localhost:3306/NOME DO SEU BANCO"
   USER =seu_usuario
   PASS =sua_senha
 </code>
