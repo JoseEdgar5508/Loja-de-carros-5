@@ -34,7 +34,7 @@ public class LojaDeCarrosApp {
                 } */
 
                 //Tentando criar tabelas e inserir dados de exemplo só para testar:
-                Conectarbd.sql.criarTudoEInserirDadosExemplo();
+                //Conectarbd.sql.criarTudoEInserirDadosExemplo();
             }
 
         } catch (SQLException e) {
