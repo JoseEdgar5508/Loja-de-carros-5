@@ -3,6 +3,8 @@ package projeto.bd.poo.meu;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+// import javax.swing.*;
+// import java.awt.*;
 
 //ARQUIVO DE CONEXÃO COM O BD
 public class Conectarbd {
@@ -126,7 +128,7 @@ public class Conectarbd {
         // ------------------- Inserção de dados que o usuário pode inserir ------------------
 
         // Vendas
-        public static void inserirDadosVendas(int idCarro, int idCliente, String data, Float valor, String metodoPagamento, String observacoes) {
+        public static void inserirDadosVendas(int idCarro, int idCliente, String data, double valor, String metodoPagamento, String observacoes) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'vendas'
                 String insertVenda = String.format("INSERT INTO vendas (idCarro, idCliente, data, valor, metodoPagamento, observacoes) VALUES " +
@@ -152,12 +154,12 @@ public class Conectarbd {
         }
         
         // Carros
-        public static void inserirDadosCarros(String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
+        public static void inserirDadosCarros(String nome, String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
-                String insertCarro = String.format("INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('%s', '%s', %d, %.2f, '%s', '%s', '%s', '%s')",
-                        marca, modelo, ano, preco, cor, placa, chassi, status);
+                String insertCarro = String.format("INSERT INTO carros (nomeCarro, marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
+                        "('%s', '%s', '%s', %d, %.2f, '%s', '%s', '%s', '%s')",
+                        nome, marca, modelo, ano, preco, cor, placa, chassi, status);
                 conn.createStatement().executeUpdate(insertCarro);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -167,8 +169,9 @@ public class Conectarbd {
         //---------------------- SELECTS ----------------------
 
         // Selecionar todos os carros no estoque (tabela carros)
-        public static void selecionarTodosCarros() {
+        public static String selecionarTodosCarros() {
             String sql = "SELECT * FROM carros WHERE status = 'Disponível'";
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.createStatement();
                 var rs = stmt.executeQuery(sql);
@@ -177,48 +180,73 @@ public class Conectarbd {
                             rs.getInt("id"), rs.getString("modelo"), rs.getString("marca"),
                             rs.getInt("ano"), rs.getDouble("preco"), rs.getString("cor"),
                             rs.getString("placa"), rs.getString("chassi"), rs.getString("status"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("ID: %d | %s - %s (%d) R$%.2f | Cor: %s | Placa: %s | Chassi: %s | Status: %s%n",
+                            rs.getInt("id"), rs.getString("modelo"), rs.getString("marca"),
+                            rs.getInt("ano"), rs.getDouble("preco"), rs.getString("cor"),
+                            rs.getString("placa"), rs.getString("chassi"), rs.getString("status")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar todos os clientes cadastrados (tabela clientes)
-        public static void selecionarTodosClientes() {
+        public static String selecionarTodosClientes() {
             String sql = "SELECT * FROM clientes WHERE email NOT LIKE ('%@funcionario.com') AND email NOT LIKE ('%@gerente.com')"; // Excluindo emails de funcionários e gerentes
+            StringBuilder sb = new StringBuilder();
+            
             try (Connection conn = getConnection()) {
                 var stmt = conn.createStatement();
                 var rs = stmt.executeQuery(sql);
+                sb.append(String.format("%-5s %-30s %-15s %-25s %-15s %-10s %-20s %-5s%n",
+                        "ID", "Nome", "Telefone", "Email", "CPF", "CEP", "Cidade", "Estado"));
+                sb.append("-".repeat(120)).append("\n");
+                
                 while (rs.next()) {
                     System.out.printf("ID: %d | %s - %s - %s | CPF: %s | Endereço: %s, %s - %s%n",
                             rs.getInt("id"), rs.getString("nome"), rs.getString("telefone"),
                             rs.getString("email"), rs.getString("cpf"), rs.getString("cep"),
                             rs.getString("cidade"), rs.getString("estado"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("%-5d %-30s %-15s %-25s %-15s %-10s %-20s %-5s%n",
+                            rs.getInt("id"), rs.getString("nome"), rs.getString("telefone"),
+                            rs.getString("email"), rs.getString("cpf"), rs.getString("cep"),
+                            rs.getString("cidade"), rs.getString("estado")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar todas as vendas realizadas (tabela vendas)
-        public static void selecionarTodasVendas() {
+        public static String selecionarTodasVendas() {
             String sql = "SELECT * FROM vendas";
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.createStatement();
                 var rs = stmt.executeQuery(sql);
                 while (rs.next()) {
-                    System.out.printf("ID: %d | Carro ID: %d | Cliente ID: %d | Data: %s | Valor: R$%.2f | Método de Pagamento: %s | Observações: %s%n",
+                    System.out.printf("Venda ID: %d | Carro ID: %d | Cliente ID: %d | Data: %s | Valor: R$%.2f | Método de Pagamento: %s | Observações: %s%n",
                             rs.getInt("id"), rs.getInt("idCarro"), rs.getInt("idCliente"),
-                            rs.getDate("data"), rs.getFloat("valor"), rs.getString("metodoPagamento"),
+                            rs.getDate("data"), rs.getDouble("valor"), rs.getString("metodoPagamento"),
                             rs.getString("observacoes"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Venda ID: %d | Carro ID: %d | Cliente ID: %d | Data: %s | Valor: R$%.2f | Método de Pagamento: %s | Observações: %s%n",
+                            rs.getInt("id"), rs.getInt("idCarro"), rs.getInt("idCliente"),
+                            rs.getDate("data"), rs.getDouble("valor"), rs.getString("metodoPagamento"),
+                            rs.getString("observacoes")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar vendas por cliente (tabela vendas) - saber se tem clientes que compraram mais de um carro
-        public static void selecionarVendasPorCliente() {
+        public static String selecionarVendasPorCliente() {
             String sql = """
                     SELECT 
                         c.id,
@@ -235,6 +263,7 @@ public class Conectarbd {
                         totalCompras DESC
                     LIMIT 10; -- Limitar ao top 10
             """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
@@ -242,15 +271,19 @@ public class Conectarbd {
                     System.out.println("Cliente ID: " + rs.getInt("id") +
                         " | Nome: " + rs.getString("nomeCliente") +
                         " | Total de Vendas: " + rs.getInt("totalCompras"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Cliente ID: %d | Nome: %s | Total de Vendas: %d%n",
+                            rs.getInt("id"), rs.getString("nomeCliente"), rs.getInt("totalCompras")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
-        
+
         // Selecionar vendas por nome do carro (tabela vendas) - saber se tem carros que foram vendidos mais de uma vez
         // Pegando por nome, marca e modelo do carro
-        public static void selecionarVendasPorCarro() {
+        public static String selecionarVendasPorCarro() {
             String sql = """
                 SELECT
                     c.nomeCarro         AS nomeCarro,
@@ -269,6 +302,7 @@ public class Conectarbd {
                     totalVendas DESC
                 LIMIT 10; -- Limitar ao top 10
             """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
@@ -277,43 +311,52 @@ public class Conectarbd {
                         " | Marca: " + rs.getString("marcaCarro") +
                         " | Modelo: " + rs.getString("modeloCarro") +
                         " | Total de Vendas: " + rs.getInt("totalVendas"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Carro: %s | Marca: %s | Modelo: %s | Total de Vendas: %d%n",
+                            rs.getString("nomeCarro"), rs.getString("marcaCarro"),
+                            rs.getString("modeloCarro"), rs.getInt("totalVendas")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar vendas por data (tabela vendas) - saber se tem vendas em um período específico
         // Pegando só o Ano e o mês da data da venda
-        public static void selecionarVendasPorData() {
+        public static String selecionarVendasPorData() {
             String sql = """
                     SELECT
-                        DATE_FORMAT(v.data, '%Y-%m') AS dataVenda,
+                        v.data AS dataVenda,
                         COUNT(*)      AS totalVendas
                     FROM
                         vendas v
                     GROUP BY
-                        DATE_FORMAT(v.data, '%Y-%m')
+                        v.data
                     ORDER BY
                         dataVenda
                     LIMIT 10; -- Limitar ao top 10
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
                     System.out.println("Data da Venda: " + rs.getString("dataVenda") +
                         " | Total de Vendas: " + rs.getInt("totalVendas"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Data da Venda: %s | Total de Vendas: %d%n",
+                            rs.getString("dataVenda"), rs.getInt("totalVendas")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
         
 
         // Selecionar vendas por valor (tabela vendas) - talvez uma média de preço dos carros vendidos
-        public static void selecionarVendasPorValor() {
+        public static String selecionarVendasPorValor() {
             String sql = """
                     SELECT
                         AVG(valor) AS mediaValor, -- média dos preços dos carros vendidos
@@ -322,6 +365,7 @@ public class Conectarbd {
                     FROM
                         vendas;
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
@@ -329,14 +373,18 @@ public class Conectarbd {
                     System.out.println("Média de Valor: R$" + rs.getDouble("mediaValor") +
                         " | Menor Valor: R$" + rs.getDouble("menorValor") +
                         " | Maior Valor: R$" + rs.getDouble("maiorValor"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Média de Valor: R$%.2f | Menor Valor: R$%.2f | Maior Valor: R$%.2f%n",
+                            rs.getDouble("mediaValor"), rs.getDouble("menorValor"), rs.getDouble("maiorValor")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar carros por marca (tabela carros) - saber a marca mais vendida
-        public static void selecionarCarrosPorMarca() {
+        public static String selecionarCarrosPorMarca() {
             String sql = """
                     SELECT
                         marca,
@@ -349,20 +397,25 @@ public class Conectarbd {
                         totalCarros DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
                     System.out.println("Marca: " + rs.getString("marca") +
                         " | Total de Carros: " + rs.getInt("totalCarros"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Marca: %s | Total de Carros: %d%n",
+                            rs.getString("marca"), rs.getInt("totalCarros")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar carros por modelo (tabela carros)- saber o modelo mais vendido
-        public static void selecionarCarrosPorModelo() {
+        public static String selecionarCarrosPorModelo() {
             String sql = """
                     SELECT
                         modelo,
@@ -375,21 +428,26 @@ public class Conectarbd {
                         totalCarros DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
                     System.out.println("Modelo: " + rs.getString("modelo") +
                         " | Total de Carros: " + rs.getInt("totalCarros"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Modelo: %s | Total de Carros: %d%n",
+                            rs.getString("modelo"), rs.getInt("totalCarros")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar carros por ano (tabela carros) - saber se tem carros de um ano específico
         // Pegando só o mês e o ano do carro
-        public static void selecionarCarrosPorAno() {
+        public static String selecionarCarrosPorAno() {
             String sql = """
                     SELECT
                         DATE_FORMAT(c.ano, '%Y-%m') AS dataVenda,
@@ -402,20 +460,25 @@ public class Conectarbd {
                         dataVenda DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
                     System.out.println("Data: " + rs.getString("dataVenda") +
                         " | Total de Carros: " + rs.getInt("totalCarros"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Data: %s | Total de Carros: %d%n",
+                            rs.getString("dataVenda"), rs.getInt("totalCarros")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
 
         // Selecionar carros por cor (tabela carros) - saber se tem carros de uma cor específica
-        public static void selecionarCarrosPorCor() {
+        public static String selecionarCarrosPorCor() {
             String sql = """
                     SELECT
                         cor,
@@ -428,17 +491,23 @@ public class Conectarbd {
                         totalCarros DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
+            StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
                     System.out.println("Cor: " + rs.getString("cor") +
                         " | Total de Carros: " + rs.getInt("totalCarros"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("Cor: %s | Total de Carros: %d%n",
+                            rs.getString("cor"), rs.getInt("totalCarros")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
+
         // Função para atualizar o status do carro (tabela carros) - se o carro foi vendido ou não
         public static void atualizarStatusCarro(int idCarro, String novoStatus) {
             String sql = "UPDATE carros SET status = ? WHERE id = ?";

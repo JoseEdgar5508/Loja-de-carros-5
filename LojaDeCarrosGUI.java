@@ -3,7 +3,7 @@ package projeto.bd.poo.meu;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import javax.swing.DefaultComboBoxModel;
+
 import projeto.bd.poo.meu.StatusCarro;
 
 public class LojaDeCarrosGUI extends JFrame {
@@ -34,6 +34,7 @@ public class LojaDeCarrosGUI extends JFrame {
     private JPanel criarAbaCarros() {
         JPanel painel = new JPanel(new GridLayout(9, 2, 5, 5));
 
+        JTextField campoNome = new JTextField();
         JTextField campoModelo = new JTextField();
         JTextField campoMarca = new JTextField();
         JTextField campoAno = new JTextField();
@@ -46,6 +47,7 @@ public class LojaDeCarrosGUI extends JFrame {
 
         JButton btnCadastrar = new JButton("Cadastrar Carro");
 
+        painel.add(new JLabel("Nome:")); painel.add(campoNome);
         painel.add(new JLabel("Modelo:")); painel.add(campoModelo);
         painel.add(new JLabel("Marca:")); painel.add(campoMarca);
         painel.add(new JLabel("Ano:")); painel.add(campoAno);
@@ -55,10 +57,12 @@ public class LojaDeCarrosGUI extends JFrame {
         painel.add(new JLabel("Chassi:")); painel.add(campoChassi);
         painel.add(new JLabel("Status:")); painel.add(comboStatus); // Adiciona o JComboBox
         painel.add(new JLabel());
+        painel.add(new JLabel());
         painel.add(btnCadastrar);
 
         btnCadastrar.addActionListener(e -> {
             try {
+                String nome = campoNome.getText();
                 String modelo = campoModelo.getText();
                 String marca = campoMarca.getText();
                 int ano = Integer.parseInt(campoAno.getText());
@@ -69,7 +73,8 @@ public class LojaDeCarrosGUI extends JFrame {
                 // Pega o status selecionado do JComboBox
                 StatusCarro status = (StatusCarro) comboStatus.getSelectedItem();
 
-                if (modelo.trim().isEmpty() || marca.trim().isEmpty() || cor.trim().isEmpty() ||
+
+                if (nome.trim().isEmpty() || modelo.trim().isEmpty() || marca.trim().isEmpty() || cor.trim().isEmpty() ||
                         placa.trim().isEmpty() || chassi.trim().isEmpty() || status == null /* Verifica se algo foi selecionado */) {
                     JOptionPane.showMessageDialog(this,
                             "Todos os campos de carro são obrigatórios!",
@@ -79,15 +84,18 @@ public class LojaDeCarrosGUI extends JFrame {
                 }
 
                 // O construtor de Carro agora espera um StatusCarro
-                Carro carro = new Carro(modelo, marca, ano, preco, cor, placa, chassi, status);
+                Carro carro = new Carro(nome, modelo, marca, ano, preco, cor, placa, chassi, status);
                 carros.add(carro);
                 if (this.carroComboBoxModel != null) { // Verifica se o modelo do combobox de vendas existe
                     this.carroComboBoxModel.addElement(carro);
                 }
-
+                
+                // Adicionando ao banco de dados
+                Conectarbd.sql.inserirDadosCarros(nome, marca, modelo, ano, preco, cor, placa, chassi, status.toString());
 
                 JOptionPane.showMessageDialog(this, "Carro cadastrado com sucesso!");
-
+                
+                campoNome.setText("");
                 campoModelo.setText("");
                 campoMarca.setText("");
                 campoAno.setText("");
@@ -145,9 +153,11 @@ public class LojaDeCarrosGUI extends JFrame {
                     return;
                 }
 
-                int telefone;
+                String telefone;
                 try {
-                    telefone = Integer.parseInt(telefoneStr);
+                    //Filtro para pegar apenas números do telefone EM STRING
+                    telefone = telefoneStr.replaceAll("[^0-9]", "");
+                    
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this,
                             "Telefone inválido. Deve ser um número.",
@@ -191,6 +201,10 @@ public class LojaDeCarrosGUI extends JFrame {
                         cidade
                 );
                 clientes.add(cliente);
+
+                // Adicionando ao banco de dados
+                Conectarbd.sql.inserirDadosClientes(nome, email, telefone, cidade, cpfInput, cepInput, estadoFormatado);
+
                 JOptionPane.showMessageDialog(this, "Cliente cadastrado com sucesso!");
 
                 campoNome.setText("");
@@ -285,7 +299,9 @@ public class LojaDeCarrosGUI extends JFrame {
 
                 Venda novaVenda = new Venda(carroSelecionado, clienteSelecionado, dataVenda, valorVenda, metodoPagamento, observacoes);
                 vendas.add(novaVenda);
-
+                
+                // Adicionando ao banco de dados
+                Conectarbd.sql.inserirDadosVendas(carroSelecionado.getCarroID(), clienteSelecionado.getClienteID(), dataVenda, valorVenda, metodoPagamento, observacoes);
                 JOptionPane.showMessageDialog(this, "Venda registrada com sucesso!");
 
                 comboBoxCarros.setSelectedIndex(-1);
@@ -311,17 +327,32 @@ public class LojaDeCarrosGUI extends JFrame {
         JButton btnVerCarros = new JButton("Ver Carros");
         JButton btnVerClientes = new JButton("Ver Clientes");
         JButton btnVerVendas = new JButton("Ver Vendas");
+        JButton btnVerVendasPorCliente = new JButton("Ver Vendas por Cliente");
+        JButton btnVerVendasPorCarro = new JButton("Ver Vendas por Carro");
+        JButton btnVerVendasPorData = new JButton("Ver Vendas por Data");
+        JButton btnVendasPorValor = new JButton("Ver Vendas por Valor");
+        JButton btnCarrosPorModelo = new JButton("Ver Carros por Modelo");
+        JButton btnCarrosPorCor = new JButton("Ver Carros por Cor");
+        JButton btnCarrosPorAno = new JButton("Ver Carros por Ano");
+        JButton btnAtualizarStatus = new JButton("Atualizar Status do Carro");
+        JButton btnDeletarVenda = new JButton("Deletar Venda");
+        JButton btnDeletarCarro = new JButton("Deletar Carro");
+
 
         btnVerCarros.addActionListener(e -> {
-            if (carros.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nenhum carro cadastrado.");
-                return;
-            }
-            StringBuilder sb = new StringBuilder("Lista de Carros:\n");
-            for (int i = 0; i < carros.size(); i++) {
-                sb.append(i).append(": ").append(carros.get(i)).append("\n");
-            }
-            JTextArea areaTexto = new JTextArea(sb.toString());
+            //if (carros.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum carro cadastrado.");
+            //    return;
+            //}
+            //StringBuilder sb = new StringBuilder("Lista de Carros:\n");
+            // for (int i = 0; i < carros.size(); i++) {
+            //     sb.append(i).append(": ").append(carros.get(i)).append("\n");
+            // }
+
+            // Usando o método de seleção do banco de dados para pegar os carros
+            String texto = Conectarbd.sql.selecionarTodosCarros(); // Pegando todos os carros do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
             areaTexto.setEditable(false);
             JScrollPane scroll = new JScrollPane(areaTexto);
             scroll.setPreferredSize(new Dimension(550, 300));
@@ -329,15 +360,20 @@ public class LojaDeCarrosGUI extends JFrame {
         });
 
         btnVerClientes.addActionListener(e -> {
-            if (clientes.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nenhum cliente cadastrado.");
-                return;
-            }
-            StringBuilder sb = new StringBuilder("Lista de Clientes:\n");
-            for (int i = 0; i < clientes.size(); i++) {
-                sb.append(i).append(": ").append(clientes.get(i)).append("\n");
-            }
-            JTextArea areaTexto = new JTextArea(sb.toString());
+            //if (clientes.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum cliente cadastrado.");
+            //    return;
+            //}
+            //Antes:
+            // StringBuilder sb = new StringBuilder("Lista de Clientes:\n");
+            // for (int i = 0; i < clientes.size(); i++) {
+            //     sb.append(i).append(": ").append(clientes.get(i)).append("\n");
+            // }
+
+            // Usando o método de seleção do banco de dados para pegar os clientes
+            String texto = Conectarbd.sql.selecionarTodosClientes(); // Pegando todos os clientes do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
             areaTexto.setEditable(false);
             JScrollPane scroll = new JScrollPane(areaTexto);
             scroll.setPreferredSize(new Dimension(550, 300));
@@ -345,27 +381,362 @@ public class LojaDeCarrosGUI extends JFrame {
         });
 
         btnVerVendas.addActionListener(e -> {
-            if (vendas.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
-                return;
-            }
-            StringBuilder sb = new StringBuilder("Lista de Vendas:\n");
-            for (Venda v : vendas) {
-                sb.append(v).append("\n\n");
-            }
-            JTextArea areaTexto = new JTextArea(sb.toString());
+            //if (vendas.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
+            //    return;
+            //}
+            //StringBuilder sb = new StringBuilder("Lista de Vendas:\n");
+            // for (Venda v : vendas) {
+            //     sb.append(v).append("\n\n");
+            // }
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarTodasVendas(); // Pegando todas as vendas do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
             areaTexto.setEditable(false);
             JScrollPane scroll = new JScrollPane(areaTexto);
             scroll.setPreferredSize(new Dimension(550, 300));
             JOptionPane.showMessageDialog(this, scroll, "Vendas Registradas", JOptionPane.INFORMATION_MESSAGE);
         });
 
+        btnVerVendasPorCliente.addActionListener(e -> {
+            //if (vendas.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarVendasPorCliente(); // Pegando todas as vendas do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Vendas Por Cliente", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnVerVendasPorCarro.addActionListener(e -> {
+            //if (vendas.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarVendasPorCarro(); // Pegando todas as vendas do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Vendas Por Carro", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnVerVendasPorData.addActionListener(e -> {
+            //if (vendas.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarVendasPorData(); // Pegando todas as vendas do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Vendas Por Data", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnVendasPorValor.addActionListener(e -> {
+            //if (vendas.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhuma venda registrada.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarVendasPorValor(); // Pegando todas as vendas do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Vendas Por Valor", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnCarrosPorModelo.addActionListener(e -> {
+            //if (carros.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum carro registrado.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarCarrosPorModelo(); // Pegando todos os carros do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Carros Por Modelo", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnCarrosPorCor.addActionListener(e -> {
+            //if (carros.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum carro registrado.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarCarrosPorCor(); // Pegando todos os carros do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Carros Por Cor", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnCarrosPorAno.addActionListener(e -> {
+            //if (carros.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum carro registrado.");
+            //    return;
+            //}
+
+            // Usando o método de seleção do banco de dados para pegar as vendas
+            String texto = Conectarbd.sql.selecionarCarrosPorAno(); // Pegando todos os carros do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Carros Por Ano", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        btnAtualizarStatus.addActionListener(e -> {
+            // 1) Cria um painel temporário para exibir no diálogo
+            JPanel painelDialog = new JPanel(new GridLayout(2, 2, 5, 5));
+            JTextField idField     = new JTextField();
+            JTextField statusField = new JTextField();
+
+            painelDialog.add(new JLabel("ID da Venda:"));
+            painelDialog.add(idField);
+            painelDialog.add(new JLabel("Novo Status:"));
+            painelDialog.add(statusField);
+
+            // 2) Exibe o diálogo modal com OK e Cancelar
+            int resultado = JOptionPane.showConfirmDialog(
+                this,                  // componente pai (pode ser um JFrame ou JDialog)
+                painelDialog,          // o painel com os campos
+                "Atualizar Status",    // título da janela
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+
+            // 3) Se o usuário clicou em OK, prossegue com validações e atualização
+            if (resultado == JOptionPane.OK_OPTION) {
+                String idText     = idField.getText().trim();
+                String novoStatus = statusField.getText().trim();
+
+                // Validação: campos não podem estar vazios
+                if (idText.isEmpty() || novoStatus.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Preencha todos os campos corretamente.",
+                        "Erro de Atualização",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // Validação: ID deve ser inteiro positivo
+                int idVenda;
+                try {
+                    idVenda = Integer.parseInt(idText);
+                    if (idVenda <= 0) throw new NumberFormatException();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "ID da Venda deve ser um número inteiro positivo.",
+                        "Erro de Atualização",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // 4) Chama o método que faz a atualização no banco
+                Conectarbd.sql.atualizarStatusCarro(idVenda, novoStatus);
+
+                // 5) Confirmação de sucesso
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Status atualizado com sucesso!",
+                    "Atualização de Status",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+        });
+
+        btnDeletarVenda.addActionListener(e -> {
+            // 1) Cria um painel temporário para pedir o ID da venda a ser deletada
+            JPanel painelDialog = new JPanel(new GridLayout(1, 2, 5, 5));
+            JTextField idField = new JTextField();
+
+            painelDialog.add(new JLabel("ID da Venda:"));
+            painelDialog.add(idField);
+
+            // 2) Exibe o diálogo para o usuário informar o ID
+            int resultado = JOptionPane.showConfirmDialog(
+                this,                  // componente pai
+                painelDialog,          // o painel com o campo de ID
+                "Deletar Venda",       // título da janela
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+
+            // 3) Se o usuário clicou em OK, valida entrada e pergunta confirmação
+            if (resultado == JOptionPane.OK_OPTION) {
+                String idText = idField.getText().trim();
+
+                // Validação: campo não pode estar vazio
+                if (idText.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Preencha o campo de ID corretamente.",
+                        "Erro de Exclusão",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // Validação: ID deve ser inteiro positivo
+                int idVenda;
+                try {
+                    idVenda = Integer.parseInt(idText);
+                    if (idVenda <= 0) throw new NumberFormatException();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "ID da Venda deve ser um número inteiro positivo.",
+                        "Erro de Exclusão",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // 4) Pergunta confirmação antes de excluir
+                int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Tem certeza que deseja excluir a venda de ID " + idVenda + "?",
+                    "Confirmação de Exclusão",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    // 5) Chama o método que faz a deleção no banco
+                    Conectarbd.sql.deletarVenda(idVenda);
+
+                    // 6) Confirmação de sucesso
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Venda deletada com sucesso!",
+                        "Deletar Venda",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+                // se o usuário escolher “No”, não faz nada e retorna
+            }
+        });
+
+        btnDeletarCarro.addActionListener(e -> {
+            // 1) Cria um painel temporário para pedir o ID do carro a ser deletado
+            JPanel painelDialog = new JPanel(new GridLayout(1, 2, 5, 5));
+            JTextField idField = new JTextField();
+
+            painelDialog.add(new JLabel("ID do Carro:"));
+            painelDialog.add(idField);
+
+            // 2) Exibe o diálogo para o usuário informar o ID
+            int resultado = JOptionPane.showConfirmDialog(
+                this,                  // componente pai
+                painelDialog,          // o painel com o campo de ID
+                "Deletar Carro",       // título da janela
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+
+            // 3) Se o usuário clicou em OK, valida entrada e pergunta confirmação
+            if (resultado == JOptionPane.OK_OPTION) {
+                String idText = idField.getText().trim();
+
+                // Validação: campo não pode estar vazio
+                if (idText.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Preencha o campo de ID corretamente.",
+                        "Erro de Exclusão",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // Validação: ID deve ser inteiro positivo
+                int idCarro;
+                try {
+                    idCarro = Integer.parseInt(idText);
+                    if (idCarro <= 0) throw new NumberFormatException();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "ID do Carro deve ser um número inteiro positivo.",
+                        "Erro de Exclusão",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // 4) Pergunta confirmação antes de excluir
+                int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Tem certeza que deseja excluir o carro de ID " + idCarro + "?",
+                    "Confirmação de Exclusão",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    // 5) Chama o método que faz a deleção no banco
+                    Conectarbd.sql.deletarCarro(idCarro);
+
+                    // 6) Confirmação de sucesso
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Carro deletado com sucesso!",
+                        "Deletar Carro",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+                // se o usuário escolher “No”, não faz nada e retorna
+            }
+        });
+
         painel.add(btnVerCarros);
         painel.add(btnVerClientes);
         painel.add(btnVerVendas);
+        painel.add(btnVerVendasPorCliente);
+        painel.add(btnVerVendasPorCarro);
+        painel.add(btnVerVendasPorData);
+        painel.add(btnVendasPorValor);
+        painel.add(btnCarrosPorModelo);
+        painel.add(btnCarrosPorCor);
+        painel.add(btnCarrosPorAno);
+        painel.add(btnAtualizarStatus);
+        painel.add(btnDeletarVenda);
+        painel.add(btnDeletarCarro);
 
         return painel;
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(LojaDeCarrosGUI::new);
