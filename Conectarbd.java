@@ -54,7 +54,6 @@ public class Conectarbd {
         public static void createCarros() {
             String sql = "CREATE TABLE IF NOT EXISTS carros (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                    "nomeCarro VARCHAR(100) NOT NULL, " +
                     "marca VARCHAR(50) NOT NULL, " +
                     "modelo VARCHAR(50) NOT NULL, " +
                     "ano DATE NOT NULL, " +
@@ -62,7 +61,7 @@ public class Conectarbd {
                     "cor VARCHAR(30) NOT NULL, " +
                     "placa VARCHAR(10) NOT NULL, " +
                     "chassi VARCHAR(20) NOT NULL, " +
-                    "status VARCHAR(20) NOT NULL" + // se o carro tem avaria ou não
+                    "status VARCHAR(20) NOT NULL" +
                     ")";
             try (Connection conn = getConnection()) {
                 conn.createStatement().execute(sql);
@@ -95,9 +94,9 @@ public class Conectarbd {
         public static void inserirDadosExemplo() {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
-                String insertCarro = "INSERT INTO carros (nomeCarro, marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('Toyota Corolla', 'Toyota', 'Corolla', '2020-01-01', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
-                        "('Honda Civic', 'Honda', 'Civic', '2019-01-01', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
+                String insertCarro = "INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
+                        "('Toyota', 'Corolla', '2020-01-01', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
+                        "('Honda', 'Civic', '2019-01-01', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
                 conn.createStatement().executeUpdate(insertCarro);
 
                 // Inserir dados de exemplo na tabela 'clientes'
@@ -154,12 +153,12 @@ public class Conectarbd {
         }
         
         // Carros
-        public static void inserirDadosCarros(String nome, String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
+        public static void inserirDadosCarros(String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
-                String insertCarro = String.format("INSERT INTO carros (nomeCarro, marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('%s', '%s', '%s', %d, %.2f, '%s', '%s', '%s', '%s')",
-                        nome, marca, modelo, ano, preco, cor, placa, chassi, status);
+                String insertCarro = String.format("INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
+                        "('%s', '%s', %d, %.2f, '%s', '%s', '%s', '%s')",
+                        marca, modelo, ano, preco, cor, placa, chassi, status);
                 conn.createStatement().executeUpdate(insertCarro);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -170,6 +169,30 @@ public class Conectarbd {
 
         // Selecionar todos os carros no estoque (tabela carros)
         public static String selecionarTodosCarros() {
+            String sql = "SELECT * FROM carros";
+            StringBuilder sb = new StringBuilder();
+            try (Connection conn = getConnection()) {
+                var stmt = conn.createStatement();
+                var rs = stmt.executeQuery(sql);
+                while (rs.next()) {
+                    System.out.printf("ID: %d | %s - %s (%d) R$%.2f | Cor: %s | Placa: %s | Chassi: %s | Status: %s%n",
+                            rs.getInt("id"), rs.getString("modelo"), rs.getString("marca"),
+                            rs.getInt("ano"), rs.getDouble("preco"), rs.getString("cor"),
+                            rs.getString("placa"), rs.getString("chassi"), rs.getString("status"));
+                    // Mostrando as informações na gui:
+                    sb.append(String.format("ID: %d | %s - %s (%d) R$%.2f | Cor: %s | Placa: %s | Chassi: %s | Status: %s%n",
+                            rs.getInt("id"), rs.getString("modelo"), rs.getString("marca"),
+                            rs.getInt("ano"), rs.getDouble("preco"), rs.getString("cor"),
+                            rs.getString("placa"), rs.getString("chassi"), rs.getString("status")));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return sb.toString(); // Retorna o StringBuilder com os dados formatados
+        }
+        
+        // Selecionar apenas os carros disponíveis:
+        public static String selecionarCarrosDisponíveis() {
             String sql = "SELECT * FROM carros WHERE status = 'Disponível'";
             StringBuilder sb = new StringBuilder();
             try (Connection conn = getConnection()) {
@@ -191,6 +214,7 @@ public class Conectarbd {
             }
             return sb.toString(); // Retorna o StringBuilder com os dados formatados
         }
+        
 
         // Selecionar todos os clientes cadastrados (tabela clientes)
         public static String selecionarTodosClientes() {
@@ -286,7 +310,6 @@ public class Conectarbd {
         public static String selecionarVendasPorCarro() {
             String sql = """
                 SELECT
-                    c.nomeCarro         AS nomeCarro,
                     c.marca             AS marcaCarro,
                     c.modelo            AS modeloCarro,
                     COUNT(*)            AS totalVendas
@@ -295,7 +318,6 @@ public class Conectarbd {
                     INNER JOIN carros c
                         ON v.idCarro = c.id
                 GROUP BY
-                    c.nomeCarro,
                     c.marca,
                     c.modelo
                 ORDER BY
@@ -307,14 +329,12 @@ public class Conectarbd {
                 var stmt = conn.prepareStatement(sql);
                 var rs = stmt.executeQuery();
                 while (rs.next()) {
-                    System.out.println("Carro: " + rs.getString("nomeCarro") +
-                        " | Marca: " + rs.getString("marcaCarro") +
+                    System.out.println("Carro: " + rs.getString("marcaCarro") +
                         " | Modelo: " + rs.getString("modeloCarro") +
                         " | Total de Vendas: " + rs.getInt("totalVendas"));
                     // Mostrando as informações na gui:
-                    sb.append(String.format("Carro: %s | Marca: %s | Modelo: %s | Total de Vendas: %d%n",
-                            rs.getString("nomeCarro"), rs.getString("marcaCarro"),
-                            rs.getString("modeloCarro"), rs.getInt("totalVendas")));
+                    sb.append(String.format("Carro: %s | Modelo: %s | Total de Vendas: %d%n",
+                            rs.getString("marcaCarro"), rs.getString("modeloCarro"), rs.getInt("totalVendas")));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -34,7 +34,6 @@ public class LojaDeCarrosGUI extends JFrame {
     private JPanel criarAbaCarros() {
         JPanel painel = new JPanel(new GridLayout(9, 2, 5, 5));
 
-        JTextField campoNome = new JTextField();
         JTextField campoModelo = new JTextField();
         JTextField campoMarca = new JTextField();
         JTextField campoAno = new JTextField();
@@ -47,7 +46,6 @@ public class LojaDeCarrosGUI extends JFrame {
 
         JButton btnCadastrar = new JButton("Cadastrar Carro");
 
-        painel.add(new JLabel("Nome:")); painel.add(campoNome);
         painel.add(new JLabel("Modelo:")); painel.add(campoModelo);
         painel.add(new JLabel("Marca:")); painel.add(campoMarca);
         painel.add(new JLabel("Ano:")); painel.add(campoAno);
@@ -56,13 +54,11 @@ public class LojaDeCarrosGUI extends JFrame {
         painel.add(new JLabel("Placa:")); painel.add(campoPlaca);
         painel.add(new JLabel("Chassi:")); painel.add(campoChassi);
         painel.add(new JLabel("Status:")); painel.add(comboStatus); // Adiciona o JComboBox
-        painel.add(new JLabel());
-        painel.add(new JLabel());
+        //painel.add(new JLabel());
         painel.add(btnCadastrar);
 
         btnCadastrar.addActionListener(e -> {
             try {
-                String nome = campoNome.getText();
                 String modelo = campoModelo.getText();
                 String marca = campoMarca.getText();
                 int ano = Integer.parseInt(campoAno.getText());
@@ -74,7 +70,7 @@ public class LojaDeCarrosGUI extends JFrame {
                 StatusCarro status = (StatusCarro) comboStatus.getSelectedItem();
 
 
-                if (nome.trim().isEmpty() || modelo.trim().isEmpty() || marca.trim().isEmpty() || cor.trim().isEmpty() ||
+                if (modelo.trim().isEmpty() || marca.trim().isEmpty() || cor.trim().isEmpty() ||
                         placa.trim().isEmpty() || chassi.trim().isEmpty() || status == null /* Verifica se algo foi selecionado */) {
                     JOptionPane.showMessageDialog(this,
                             "Todos os campos de carro são obrigatórios!",
@@ -84,18 +80,17 @@ public class LojaDeCarrosGUI extends JFrame {
                 }
 
                 // O construtor de Carro agora espera um StatusCarro
-                Carro carro = new Carro(nome, modelo, marca, ano, preco, cor, placa, chassi, status);
+                Carro carro = new Carro(modelo, marca, ano, preco, cor, placa, chassi, status);
                 carros.add(carro);
                 if (this.carroComboBoxModel != null) { // Verifica se o modelo do combobox de vendas existe
                     this.carroComboBoxModel.addElement(carro);
                 }
                 
                 // Adicionando ao banco de dados
-                Conectarbd.sql.inserirDadosCarros(nome, marca, modelo, ano, preco, cor, placa, chassi, status.toString());
+                Conectarbd.sql.inserirDadosCarros(marca, modelo, ano, preco, cor, placa, chassi, status.toString());
 
                 JOptionPane.showMessageDialog(this, "Carro cadastrado com sucesso!");
                 
-                campoNome.setText("");
                 campoModelo.setText("");
                 campoMarca.setText("");
                 campoAno.setText("");
@@ -228,7 +223,7 @@ public class LojaDeCarrosGUI extends JFrame {
 
     private JPanel criarAbaVendas() {
         JPanel painel = new JPanel(new GridLayout(7, 2, 5, 5));
-
+        
         JComboBox<Carro> comboBoxCarros = new JComboBox<>(this.carroComboBoxModel);
 
         JTextField campoIndiceCliente = new JTextField();
@@ -240,7 +235,7 @@ public class LojaDeCarrosGUI extends JFrame {
 
         painel.add(new JLabel("Selecione o Carro:"));
         painel.add(comboBoxCarros);
-        painel.add(new JLabel("Cliente (CPF.):"));
+        painel.add(new JLabel("Cliente (CPF):"));
         painel.add(campoIndiceCliente);
         painel.add(new JLabel("Data da Venda (AAAA-MM-DD):"));
         painel.add(campoData);
@@ -324,7 +319,8 @@ public class LojaDeCarrosGUI extends JFrame {
     private JPanel criarAbaConsultas() {
         JPanel painel = new JPanel(new FlowLayout());
 
-        JButton btnVerCarros = new JButton("Ver Carros");
+        JButton btnVerCarros = new JButton("Ver Todos os Carros");
+        JButton btnVerCarrosDisponiveis = new JButton("Ver Carros Disponíveis");
         JButton btnVerClientes = new JButton("Ver Clientes");
         JButton btnVerVendas = new JButton("Ver Vendas");
         JButton btnVerVendasPorCliente = new JButton("Ver Vendas por Cliente");
@@ -351,6 +347,26 @@ public class LojaDeCarrosGUI extends JFrame {
 
             // Usando o método de seleção do banco de dados para pegar os carros
             String texto = Conectarbd.sql.selecionarTodosCarros(); // Pegando todos os carros do banco de dados
+
+            JTextArea areaTexto = new JTextArea(texto);
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+            scroll.setPreferredSize(new Dimension(550, 300));
+            JOptionPane.showMessageDialog(this, scroll, "Carros Cadastrados", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        btnVerCarrosDisponiveis.addActionListener(e -> {
+            //if (carros.isEmpty()) {
+            //    JOptionPane.showMessageDialog(this, "Nenhum carro cadastrado.");
+            //    return;
+            //}
+            //StringBuilder sb = new StringBuilder("Lista de Carros:\n");
+            // for (int i = 0; i < carros.size(); i++) {
+            //     sb.append(i).append(": ").append(carros.get(i)).append("\n");
+            // }
+
+            // Usando o método de seleção do banco de dados para pegar os carros
+            String texto = Conectarbd.sql.selecionarCarrosDisponíveis(); // Pegando todos os carros do banco de dados
 
             JTextArea areaTexto = new JTextArea(texto);
             areaTexto.setEditable(false);
@@ -721,6 +737,7 @@ public class LojaDeCarrosGUI extends JFrame {
         });
 
         painel.add(btnVerCarros);
+        painel.add(btnVerCarrosDisponiveis);
         painel.add(btnVerClientes);
         painel.add(btnVerVendas);
         painel.add(btnVerVendasPorCliente);
