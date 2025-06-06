@@ -223,98 +223,109 @@ public class LojaDeCarrosGUI extends JFrame {
 
     private JPanel criarAbaVendas() {
         JPanel painel = new JPanel(new GridLayout(7, 2, 5, 5));
-        
-        JComboBox<Carro> comboBoxCarros = new JComboBox<>(this.carroComboBoxModel);
 
-        JTextField campoIndiceCliente = new JTextField();
-        JTextField campoData = new JTextField();
-        JTextField campoValor = new JTextField();
-        JTextField campoMetodo = new JTextField();
-        JTextField campoObs = new JTextField();
-        JButton btnRegistrar = new JButton("Registrar Venda");
+    // 1) Preencha comboBoxCarros (supondo que já exista carroComboBoxModel populado)
+    JComboBox<Carro> comboBoxCarros = new JComboBox<>(this.carroComboBoxModel);
 
-        painel.add(new JLabel("Selecione o Carro:"));
-        painel.add(comboBoxCarros);
-        painel.add(new JLabel("Cliente (CPF):"));
-        painel.add(campoIndiceCliente);
-        painel.add(new JLabel("Data da Venda (AAAA-MM-DD):"));
-        painel.add(campoData);
-        painel.add(new JLabel("Valor da Venda:"));
-        painel.add(campoValor);
-        painel.add(new JLabel("Método de Pagamento:"));
-        painel.add(campoMetodo);
-        painel.add(new JLabel("Observações:"));
-        painel.add(campoObs);
-        painel.add(new JLabel());
-        painel.add(btnRegistrar);
+    JTextField campoCpfCliente = new JTextField();
+    JTextField campoData       = new JTextField();
+    JTextField campoValor      = new JTextField();
+    JTextField campoMetodo     = new JTextField();
+    JTextField campoObs        = new JTextField();
+    JButton btnRegistrar       = new JButton("Registrar Venda");
 
-        btnRegistrar.addActionListener(e -> {
-            try {
-                Carro carroSelecionado = (Carro) comboBoxCarros.getSelectedItem();
+    painel.add(new JLabel("Selecione o Carro:"));
+    painel.add(comboBoxCarros);
+    painel.add(new JLabel("CPF do Cliente:"));
+    painel.add(campoCpfCliente);
+    painel.add(new JLabel("Data da Venda (AAAA-MM-DD):"));
+    painel.add(campoData);
+    painel.add(new JLabel("Valor da Venda:"));
+    painel.add(campoValor);
+    painel.add(new JLabel("Método de Pagamento:"));
+    painel.add(campoMetodo);
+    painel.add(new JLabel("Observações:"));
+    painel.add(campoObs);
+    painel.add(new JLabel());
+    painel.add(btnRegistrar);
 
-                if (carroSelecionado == null) {
-                    JOptionPane.showMessageDialog(this, "Por favor, selecione um carro.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+    clientes.clear();
+    //clientes.addAll(Conectarbd.sql.selecionarTodosClientes());
 
-                String indiceClienteStr = campoIndiceCliente.getText();
-                Cliente clienteSelecionado = null;
+    btnRegistrar.addActionListener(e -> {
+        // Seleção de carro
+        Carro carroSelecionado = (Carro) comboBoxCarros.getSelectedItem();
+        if (carroSelecionado == null) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecione um carro.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-                if (indiceClienteStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "O campo do cliente não pode estar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                try {
-                    int clienteIdx = Integer.parseInt(indiceClienteStr);
-                    if (clienteIdx >= 0 && clienteIdx < clientes.size()) {
-                        clienteSelecionado = clientes.get(clienteIdx);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Índice do cliente inválido.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Referência do cliente inválida. Use o índice numérico.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+        // Busca do CPF informado
+        String cpfInformado = campoCpfCliente.getText().trim();
+        if (cpfInformado.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "O campo CPF do cliente não pode ficar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // Remove pontos e hifens caso o usuário os informe
+        cpfInformado = cpfInformado.replaceAll("[^0-9]", "");
 
-                String dataVenda = campoData.getText();
-                if (!dataVenda.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                    JOptionPane.showMessageDialog(this, "Formato da data inválido. Use AAAA-MM-DD.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                double valorVenda = Double.parseDouble(campoValor.getText());
-                String metodoPagamento = campoMetodo.getText();
-                String observacoes = campoObs.getText();
-
-                if (metodoPagamento.trim().isEmpty()){
-                    JOptionPane.showMessageDialog(this, "O método de pagamento não pode estar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                Venda novaVenda = new Venda(carroSelecionado, clienteSelecionado, dataVenda, valorVenda, metodoPagamento, observacoes);
-                vendas.add(novaVenda);
-                
-                // Adicionando ao banco de dados
-                Conectarbd.sql.inserirDadosVendas(carroSelecionado.getCarroID(), clienteSelecionado.getClienteID(), dataVenda, valorVenda, metodoPagamento, observacoes);
-                JOptionPane.showMessageDialog(this, "Venda registrada com sucesso!");
-
-                comboBoxCarros.setSelectedIndex(-1);
-                campoIndiceCliente.setText("");
-                campoData.setText("");
-                campoValor.setText("");
-                campoMetodo.setText("");
-                campoObs.setText("");
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Erro ao registrar venda: Verifique os campos numéricos (Valor, Índice do Cliente).", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ocorreu um erro inesperado ao registrar venda: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
+        // Procura o cliente na lista por CPF
+        Cliente clienteSelecionado = null;
+        for (Cliente c : clientes) {
+            String cpfLimpo = c.getcpf().replaceAll("[^0-9]", "");
+            if (cpfLimpo.equals(cpfInformado)) {
+                clienteSelecionado = c;
+                break;
             }
-        });
-        return painel;
-    }
+        }
+        if (clienteSelecionado == null) {
+            JOptionPane.showMessageDialog(this, "Nenhum cliente cadastrado com este CPF.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validação da data no formato AAAA-MM-DD
+        String dataVenda = campoData.getText().trim();
+        if (!dataVenda.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            JOptionPane.showMessageDialog(this, "Formato da data inválido. Use AAAA-MM-DD.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Conversão do valor
+        double valorVenda;
+        try {
+            valorVenda = Double.parseDouble(campoValor.getText().trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Valor da venda inválido. Digite um número válido.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validação do método de pagamento
+        String metodoPagamento = campoMetodo.getText().trim();
+        if (metodoPagamento.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "O método de pagamento não pode ficar vazio.", "Erro na Venda", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String observacoes = campoObs.getText().trim();
+
+        // Cria o objeto Venda e adiciona na lista local (se quiser)
+        Venda novaVenda = new Venda(carroSelecionado, clienteSelecionado, dataVenda, valorVenda, metodoPagamento, observacoes);
+        vendas.add(novaVenda);
+
+        // Insere no banco de dados
+        Conectarbd.sql.inserirDadosVendas(
+            carroSelecionado.getCarroID(),
+            clienteSelecionado.getClienteID(),
+            dataVenda,
+            valorVenda,
+            metodoPagamento,
+            observacoes
+        );
+        JOptionPane.showMessageDialog(this, "Venda registrada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    });
+
+    return painel;
+}
 
     private JPanel criarAbaConsultas() {
         JPanel painel = new JPanel(new FlowLayout());

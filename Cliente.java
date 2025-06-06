@@ -21,7 +21,7 @@ public class Cliente {
         this.estado = estado;
         this.cidade = cidade;
     }
-
+    
     @Override
     public String toString() {
         return "ID: " + clienteID + " | " + nome + " - " + telefone + " - " + email +
@@ -30,5 +30,8 @@ public class Cliente {
 
     public int getClienteID() {
         return clienteID;
+    }
+    public String getcpf() {
+        return cpf;
     }
 }

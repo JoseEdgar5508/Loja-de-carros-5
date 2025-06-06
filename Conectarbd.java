@@ -2,6 +2,7 @@ package projeto.bd.poo.meu;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 // import javax.swing.*;
 // import java.awt.*;
@@ -56,7 +57,7 @@ public class Conectarbd {
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "marca VARCHAR(50) NOT NULL, " +
                     "modelo VARCHAR(50) NOT NULL, " +
-                    "ano DATE NOT NULL, " +
+                    "ano YEAR NOT NULL, " +
                     "preco DECIMAL(10, 2) NOT NULL, " +
                     "cor VARCHAR(30) NOT NULL, " +
                     "placa VARCHAR(10) NOT NULL, " +
@@ -95,8 +96,8 @@ public class Conectarbd {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
                 String insertCarro = "INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('Toyota', 'Corolla', '2020-01-01', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
-                        "('Honda', 'Civic', '2019-01-01', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
+                        "('Toyota', 'Corolla', '2020', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
+                        "('Honda', 'Civic', '2019', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
                 conn.createStatement().executeUpdate(insertCarro);
 
                 // Inserir dados de exemplo na tabela 'clientes'
@@ -128,25 +129,49 @@ public class Conectarbd {
 
         // Vendas
         public static void inserirDadosVendas(int idCarro, int idCliente, String data, double valor, String metodoPagamento, String observacoes) {
-            try (Connection conn = getConnection()) {
-                // Inserir dados de exemplo na tabela 'vendas'
-                String insertVenda = String.format("INSERT INTO vendas (idCarro, idCliente, data, valor, metodoPagamento, observacoes) VALUES " +
-                        "(%d, %d, '%s', %.2f, '%s', '%s')",
-                        idCarro, idCliente, data, valor, metodoPagamento, observacoes);
-                conn.createStatement().executeUpdate(insertVenda);
+            // 1) Note que listamos exatamente as 6 colunas que não são AUTO_INCREMENT
+            String sql = "INSERT INTO vendas "
+                       + "(`idCarro`, `idCliente`, `data`, `valor`, `metodoPagamento`, `observacoes`) "
+                       + "VALUES (?, ?, ?, ?, ?, ?)";
+            // Observe que usamos crase (`) em torno de `data` porque "data" é palavra reservada no MySQL.
+
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setInt(1, idCarro);
+                ps.setInt(2, idCliente);
+
+                // Transforma a String “YYYY-MM-DD” em java.sql.Date
+                ps.setDate(3, java.sql.Date.valueOf(data));
+
+                ps.setDouble(4, valor);
+                ps.setString(5, metodoPagamento);
+                ps.setString(6, observacoes);
+
+                ps.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
+                // Se der erro de contagem de colunas, a stack trace mostrará a linha exata
             }
         }
 
         // Clientes
         public static void inserirDadosClientes(String nome, String email, String telefone, String cidade, String cpf, String cep, String estado) {
-            try (Connection conn = getConnection()) {
-                // Inserir dados de exemplo na tabela 'clientes'
-                String insertCliente = String.format("INSERT INTO clientes (nome, email, telefone, cidade, cpf, cep, estado) VALUES " +
-                        "('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-                        nome, email, telefone, cidade, cpf, cep, estado);
-                conn.createStatement().executeUpdate(insertCliente);
+            String sql = "INSERT INTO clientes " +
+                 "(nome, email, telefone, cidade, cpf, cep, estado) " +
+                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, nome);
+                ps.setString(2, email);
+                ps.setString(3, telefone);
+                ps.setString(4, cidade);
+                ps.setString(5, cpf);
+                ps.setString(6, cep);
+                ps.setString(7, estado);
+
+                ps.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -154,12 +179,25 @@ public class Conectarbd {
         
         // Carros
         public static void inserirDadosCarros(String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
-            try (Connection conn = getConnection()) {
-                // Inserir dados de exemplo na tabela 'carros'
-                String insertCarro = String.format("INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('%s', '%s', %d, %.2f, '%s', '%s', '%s', '%s')",
-                        marca, modelo, ano, preco, cor, placa, chassi, status);
-                conn.createStatement().executeUpdate(insertCarro);
+            // a instrução SQL com exatamente 8 colunas e 8 "?" no mesmo número
+            String insertCarro =
+                "INSERT INTO carros " +
+                "(marca, modelo, ano, preco, cor, placa, chassi, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            try (Connection conn = getConnection();
+                PreparedStatement ps = conn.prepareStatement(insertCarro)) {
+
+                ps.setString(1, marca);
+                ps.setString(2, modelo);
+                ps.setInt(3, ano);        // para coluna YEAR, aceita int
+                ps.setDouble(4, preco);
+                ps.setString(5, cor);
+                ps.setString(6, placa);
+                ps.setString(7, chassi);
+                ps.setString(8, status);  // resultado de status.toString()
+
+                ps.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -218,7 +256,8 @@ public class Conectarbd {
 
         // Selecionar todos os clientes cadastrados (tabela clientes)
         public static String selecionarTodosClientes() {
-            String sql = "SELECT * FROM clientes WHERE email NOT LIKE ('%@funcionario.com') AND email NOT LIKE ('%@gerente.com')"; // Excluindo emails de funcionários e gerentes
+            String sql = "SELECT * FROM clientes"; 
+            // WHERE email NOT LIKE ('%@funcionario.com') AND email NOT LIKE ('%@gerente.com') // Excluindo emails de funcionários e gerentes
             StringBuilder sb = new StringBuilder();
             
             try (Connection conn = getConnection()) {

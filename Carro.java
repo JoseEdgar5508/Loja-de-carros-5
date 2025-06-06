@@ -23,7 +23,7 @@ public class Carro {
         this.chassi = chassi;
         this.status = status; // Atribui o valor do enum
     }
-
+    
     public StatusCarro getStatus() {
         return status;
     }
