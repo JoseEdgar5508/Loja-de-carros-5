@@ -96,21 +96,33 @@ public class Conectarbd {
             try (Connection conn = getConnection()) {
                 // Inserir dados de exemplo na tabela 'carros'
                 String insertCarro = "INSERT INTO carros (marca, modelo, ano, preco, cor, placa, chassi, status) VALUES " +
-                        "('Toyota', 'Corolla', '2020', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
-                        "('Honda', 'Civic', '2019', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível')";
+                    "('Toyota', 'Corolla', '2020', 90000.00, 'Prata', 'ABC1234', '1HGBH41JXMN109186', 'Disponível'), " +
+                    "('Honda',  'Civic',   '2019', 85000.00, 'Preto', 'XYZ5678', '1HGCM82633A123456', 'Disponível'), " +
+                    // Mais registros para testes:
+                    "('Toyota', 'Corolla', '2020', 92000.00, 'Branco', 'DEF2345', '2HGES16555H123456', 'Disponível'), " +
+                    "('Ford',   'Focus',   '2020', 78000.00, 'Preto',   'GHI3456', '3FAHP0HA6AR123456', 'Vendido'), " +
+                    "('Honda',  'Civic',   '2022', 88000.00, 'Cinza',  'JKL4567', '19XFC2F59GE123456', 'Disponível')";
                 conn.createStatement().executeUpdate(insertCarro);
 
                 // Inserir dados de exemplo na tabela 'clientes'
                 String insertCliente = "INSERT INTO clientes (nome, email, telefone, cidade, cpf, cep, estado) VALUES " +
-                        "('João Silva', 'joao.silva@example.com', '123456789', 'São Paulo', '123.456.789-00', '01234-567', 'SP'), " +
-                        "('Maria Souza', 'maria.souza@example.com', '987654321', 'Rio de Janeiro', '987.654.321-00', '76543-210', 'RJ')";
+                    "('João Silva',  'joao.silva@example.com',  '123456789', 'São Paulo',    '12345678900', '01234567', 'SP'), " +
+                    "('Maria Souza','maria.souza@example.com','987654321','Rio de Janeiro','98765432100','76543210','RJ'), " +
+                    // Mais registros para testes:
+                    "('Pedro Alves','pedro.alves@example.com','555123456','Belo Horizonte','11122233344','30123456','MG'), " +
+                    "('Ana Castro', 'ana.castro@example.com', '666987654','Curitiba',     '55566677788','81234567','PR')";
                 conn.createStatement().executeUpdate(insertCliente);
-                
+
                 // Inserir dados de exemplo na tabela 'vendas'
                 String insertVenda = "INSERT INTO vendas (idCarro, idCliente, data, valor, metodoPagamento, observacoes) VALUES " +
-                        "(1, 1, '2023-01-01', 90000.00, 'Cartão de Crédito', 'Venda realizada com sucesso'), " +
-                        "(2, 2, '2023-01-02', 85000.00, 'Dinheiro', 'Venda realizada com sucesso')";
+                    "(1, 1, '2023-01-01', 90000.00, 'Cartão de Crédito', 'Venda realizada com sucesso'), " +
+                    "(2, 2, '2023-01-02', 85000.00, 'Dinheiro',           'Venda realizada com sucesso'), " +
+                    // Mais registros para testes:
+                    "(3, 1, '2023-02-15', 92000.00, 'Pix',                'Cliente voltou a comprar o mesmo modelo'), " +
+                    "(4, 3, '2023-03-10', 78000.00, 'Boleto',             'Oferta especial'), " +
+                    "(5, 4, '2023-04-05', 88000.00, 'Cartão de Débito',   'Venda concluída')";
                 conn.createStatement().executeUpdate(insertVenda);
+
                 System.out.println("Dados de exemplo inseridos com sucesso.");
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -129,11 +141,12 @@ public class Conectarbd {
 
         // Vendas
         public static void inserirDadosVendas(int idCarro, int idCliente, String data, double valor, String metodoPagamento, String observacoes) {
-            // 1) Note que listamos exatamente as 6 colunas que não são AUTO_INCREMENT
+            // Criando a tabela vendas se não existir
+            createVendas();
+            // A instrução SQL com exatamente 6 colunas e 6 "?" no mesmo número
             String sql = "INSERT INTO vendas "
                        + "(`idCarro`, `idCliente`, `data`, `valor`, `metodoPagamento`, `observacoes`) "
                        + "VALUES (?, ?, ?, ?, ?, ?)";
-            // Observe que usamos crase (`) em torno de `data` porque "data" é palavra reservada no MySQL.
 
             try (Connection conn = getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -157,6 +170,9 @@ public class Conectarbd {
 
         // Clientes
         public static void inserirDadosClientes(String nome, String email, String telefone, String cidade, String cpf, String cep, String estado) {
+            // Criando a tabela clientes se não existir
+            createClientes();
+            // A instrução SQL com exatamente 7 colunas e 7 "?" no mesmo número
             String sql = "INSERT INTO clientes " +
                  "(nome, email, telefone, cidade, cpf, cep, estado) " +
                  "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -179,6 +195,8 @@ public class Conectarbd {
         
         // Carros
         public static void inserirDadosCarros(String marca, String modelo, int ano, double preco, String cor, String placa, String chassi, String status) {
+            // Criando a tabela carros se não existir
+            createCarros();
             // a instrução SQL com exatamente 8 colunas e 8 "?" no mesmo número
             String insertCarro =
                 "INSERT INTO carros " +
@@ -393,7 +411,7 @@ public class Conectarbd {
                     GROUP BY
                         v.data
                     ORDER BY
-                        dataVenda
+                        dataVenda DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
             StringBuilder sb = new StringBuilder();
@@ -516,7 +534,7 @@ public class Conectarbd {
                     GROUP BY
                         dataVenda
                     ORDER BY
-                        dataVenda DESC
+                        totalCarros DESC
                     LIMIT 10; -- Limitar ao top 10
                 """;
             StringBuilder sb = new StringBuilder();
@@ -619,13 +637,5 @@ public class Conectarbd {
                 e.printStackTrace();
             }
         }
-        
-        //SELECTS PRA VER DEPOIS:
-        // Selecionar carros por tipo (tabela carros) - se são sedãs, SUVs, etc. - VER DEPOIS 
-        // Selecionar carros por categoria (tabela carros) - se são populares, luxuosos, esportivos, etc. - VER DEPOIS
-        // Selecionar vendas por método de pagamento (tabela vendas) - ver depois
-        // Selecionar carros por status (tabela carros) - se são comprados carros usados ou novos - VER DEPOIS
-        // Selecionar clientes por cidade (tabela clientes) - saber se tem clientes de uma cidade específica
-        // Selecionar clientes por estado (tabela clientes) - saber se tem clientes de um estado específico
     }
 }
